@@ -2,171 +2,135 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Pro Stone Optimizer v2.0</title>
+    <title>Easy Stone Optimizer</title>
     <style>
-        :root { --bg: #121212; --card: #1e1e1e; --accent: #00e5ff; --text: #eceff1; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
-        .container { max-width: 1100px; margin: auto; background: var(--card); padding: 25px; border-radius: 12px; }
-        .grid { display: grid; grid-template-columns: 350px 1fr; gap: 20px; }
-        .input-section { background: #252525; padding: 15px; border-radius: 8px; max-height: 80vh; overflow-y: auto; }
-        .piece-card { background: #333; padding: 10px; margin-bottom: 15px; border-left: 4px solid var(--accent); border-radius: 4px; }
-        input, select, textarea { width: 100%; padding: 8px; margin: 5px 0; background: #121212; border: 1px solid #444; color: white; border-radius: 4px; box-sizing: border-box; }
-        .canvas-area { background: #000; border-radius: 8px; position: sticky; top: 20px; height: fit-content; padding: 10px; text-align: center; }
-        canvas { border: 1px solid #333; max-width: 100%; background-color: #1a1a1a; }
-        .btn { cursor: pointer; border: none; padding: 10px; border-radius: 4px; font-weight: bold; width: 100%; margin-top: 10px; }
-        .btn-add { background: #37474f; color: white; }
-        .btn-calc { background: var(--accent); color: #000; font-size: 1.1em; }
-        .coord-hint { font-size: 0.75em; color: #999; margin-bottom: 5px; }
-        .stats { margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .stat-item { background: #252525; padding: 10px; border-radius: 6px; text-align: center; border: 1px solid #333; }
-        .val { display: block; font-size: 1.4em; color: var(--accent); font-weight: bold; }
+        :root { --bg: #f4f7f6; --dark: #2c3e50; --accent: #27ae60; --text: #333; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
+        .container { max-width: 1200px; margin: auto; display: grid; grid-template-columns: 400px 1fr; gap: 30px; }
+        .sidebar { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .canvas-area { background: white; padding: 20px; border-radius: 12px; border: 2px dashed #ccc; text-align: center; }
+        .shape-selector { display: flex; gap: 10px; margin-bottom: 20px; }
+        .shape-btn { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; background: #fff; }
+        .shape-btn.active { border-color: var(--accent); background: #eafaf1; font-weight: bold; }
+        .input-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+        input { width: 80px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        .btn-primary { background: var(--accent); color: white; border: none; padding: 15px; width: 100%; border-radius: 8px; font-size: 1rem; cursor: pointer; margin-top: 10px; }
+        .piece-entry { border-bottom: 1px solid #eee; padding: 15px 0; }
+        .diagram { font-size: 0.8rem; color: #666; margin-bottom: 10px; background: #f9f9f9; padding: 10px; border-radius: 4px; line-height: 1.4; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2 style="margin-top:0; color:var(--accent)">Stone Layout Optimizer (Complex Geometry)</h2>
-    
-    <div class="grid">
-        <div class="input-section">
-            <label>Slab Dimensions (Inches)</label>
-            <div style="display:flex; gap:10px">
-                <input type="number" id="slabL" placeholder="Length" value="120">
-                <input type="number" id="slabW" placeholder="Width" value="65">
-            </div>
-
-            <h4 style="margin-bottom:5px">Pieces & Templates</h4>
-            <div id="pieceList">
-                <div class="piece-card">
-                    <input type="text" placeholder="Piece Name (e.g. L-Island)" class="p-name">
-                    <p class="coord-hint">Coordinates (X,Y points separated by spaces):<br>Example L-Shape: 0,0 60,0 60,25 25,25 25,50 0,50</p>
-                    <textarea class="p-coords" rows="3">0,0 80,0 80,25 25,25 25,60 0,60</textarea>
-                </div>
-            </div>
-            
-            <button class="btn btn-add" onclick="addPiece()">+ Add Complex Piece</button>
-            <button class="btn btn-calc" onclick="runOptimization()">Optimize Layout</button>
-
-            <div class="stats" id="statPanel" style="display:none">
-                <div class="stat-item">Yield <span class="val" id="yieldVal">0%</span></div>
-                <div class="stat-item">Waste <span class="val" id="wasteVal">0%</span></div>
-            </div>
+    <div class="sidebar">
+        <h2>1. Slab Size</h2>
+        <div class="input-row">
+            <span>Length (in)</span> <input type="number" id="slabL" value="120">
+        </div>
+        <div class="input-row">
+            <span>Width (in)</span> <input type="number" id="slabW" value="65">
         </div>
 
-        <div class="canvas-area">
-            <canvas id="layoutCanvas"></canvas>
-            <p style="font-size: 0.8em; color: #666;">Visual Representation (White = Slab, Blue = Cuts)</p>
+        <hr>
+
+        <h2>2. Add Piece</h2>
+        <div class="shape-selector">
+            <button class="shape-btn active" onclick="setShape('rect', this)">Rect</button>
+            <button class="shape-btn" onclick="setShape('lshape', this)">L-Shape</button>
+            <button class="shape-btn" onclick="setShape('ushape', this)">U-Shape</button>
         </div>
+
+        <div id="dynamicInputs">
+            </div>
+
+        <button class="btn-primary" onclick="addPieceToLayout()">Add to Slab</button>
+    </div>
+
+    <div class="canvas-area">
+        <h3 style="margin-top:0">Live Layout Optimization</h3>
+        <canvas id="mainCanvas" width="700" height="400"></canvas>
+        <div id="stats" style="margin-top:20px; font-weight: bold; color: var(--dark);"></div>
     </div>
 </div>
 
 <script>
-    function addPiece() {
-        const div = document.createElement('div');
-        div.className = 'piece-card';
-        div.innerHTML = `
-            <input type="text" placeholder="Piece Name" class="p-name">
-            <textarea class="p-coords" rows="3" placeholder="X,Y X,Y X,Y..."></textarea>
-            <button class="btn" style="background:#5c1a1a; padding:4px; font-size:0.8em" onclick="this.parentElement.remove()">Remove</button>
-        `;
-        document.getElementById('pieceList').appendChild(div);
+    let currentShape = 'rect';
+    let pieces = [];
+
+    function setShape(shape, btn) {
+        currentShape = shape;
+        document.querySelectorAll('.shape-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderInputs();
     }
 
-    function parseCoords(coordStr) {
-        return coordStr.trim().split(/\s+/).map(pair => {
-            const [x, y] = pair.split(',').map(Number);
-            return { x, y };
-        });
-    }
-
-    function getBoundingBox(points) {
-        const xs = points.map(p => p.x);
-        const ys = points.map(p => p.y);
-        return {
-            w: Math.max(...xs) - Math.min(...xs),
-            h: Math.max(...ys) - Math.min(...ys)
-        };
-    }
-
-    function calculatePolygonArea(points) {
-        let area = 0;
-        for (let i = 0; i < points.length; i++) {
-            let j = (i + 1) % points.length;
-            area += points[i].x * points[j].y;
-            area -= points[j].x * points[i].y;
+    function renderInputs() {
+        const container = document.getElementById('dynamicInputs');
+        if (currentShape === 'rect') {
+            container.innerHTML = `
+                <div class="diagram">Standard rectangle.</div>
+                <div class="input-row">Length <input type="number" id="p1" value="30"></div>
+                <div class="input-row">Width <input type="number" id="p2" value="25"></div>`;
+        } else if (currentShape === 'lshape') {
+            container.innerHTML = `
+                <div class="diagram">L-Shape:<br>A = Long side, B = Return side,<br>C = Depth of A, D = Depth of B</div>
+                <div class="input-row">A (Length) <input type="number" id="p1" value="60"></div>
+                <div class="input-row">B (Total Width) <input type="number" id="p2" value="40"></div>
+                <div class="input-row">C (A Depth) <input type="number" id="p3" value="25"></div>
+                <div class="input-row">D (B Depth) <input type="number" id="p4" value="25"></div>`;
         }
-        return Math.abs(area / 2);
     }
 
-    function runOptimization() {
-        const slabL = parseFloat(document.getElementById('slabL').value);
-        const slabW = parseFloat(document.getElementById('slabW').value);
-        const canvas = document.getElementById('layoutCanvas');
+    function addPieceToLayout() {
+        const p1 = parseFloat(document.getElementById('p1').value);
+        const p2 = parseFloat(document.getElementById('p2').value);
+        let coords = [];
+
+        if (currentShape === 'rect') {
+            coords = [{x:0,y:0}, {x:p1,y:0}, {x:p1,y:p2}, {x:0,y:p2}];
+        } else if (currentShape === 'lshape') {
+            const p3 = parseFloat(document.getElementById('p3').value); // Depth A
+            const p4 = parseFloat(document.getElementById('p4').value); // Depth B
+            coords = [{x:0,y:0}, {x:p1,y:0}, {x:p1,y:p4}, {x:p3,y:p4}, {x:p3,y:p2}, {x:0,y:p2}];
+        }
+
+        pieces.push({ coords, color: `hsl(${Math.random() * 360}, 60%, 50%)` });
+        draw();
+    }
+
+    function draw() {
+        const canvas = document.getElementById('mainCanvas');
         const ctx = canvas.getContext('2d');
+        const slabL = document.getElementById('slabL').value;
+        const slabW = document.getElementById('slabW').value;
+        const scale = 5; // simplified scale
 
-        const scale = Math.min(600 / slabL, 400 / slabW);
-        canvas.width = slabL * scale;
-        canvas.height = slabW * scale;
-
-        // Draw Slab
-        ctx.fillStyle = "#fff";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        let totalCutArea = 0;
-        const coordElements = document.querySelectorAll('.p-coords');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        let currentX = 2; // Margin
-        let currentY = 2;
-        let maxHeightInRow = 0;
+        // Draw Slab
+        ctx.strokeStyle = "#333";
+        ctx.strokeRect(0, 0, slabL * scale, slabW * scale);
 
-        coordElements.forEach((el, index) => {
-            const points = parseCoords(el.value);
-            if (points.length < 3) return;
-
-            const box = getBoundingBox(points);
-            const area = calculatePolygonArea(points);
-            totalCutArea += area;
-
-            // Simple "Shelf" Packing Logic
-            if (currentX + box.w > slabL) {
-                currentX = 2;
-                currentY += maxHeightInRow + 2;
-                maxHeightInRow = 0;
-            }
-
-            // Draw Piece
+        // Simple tiling (for visualization)
+        let offsetX = 0;
+        pieces.forEach(p => {
             ctx.beginPath();
-            ctx.moveTo((points[0].x + currentX) * scale, (points[0].y + currentY) * scale);
-            for (let i = 1; i < points.length; i++) {
-                ctx.lineTo((points[i].x + currentX) * scale, (points[i].y + currentY) * scale);
-            }
+            ctx.fillStyle = p.color;
+            p.coords.forEach((pt, i) => {
+                if (i === 0) ctx.moveTo((pt.x + offsetX) * scale, pt.y * scale);
+                else ctx.lineTo((pt.x + offsetX) * scale, pt.y * scale);
+            });
             ctx.closePath();
-            
-            ctx.fillStyle = "rgba(0, 229, 255, 0.6)";
             ctx.fill();
-            ctx.strokeStyle = "#004d40";
-            ctx.lineWidth = 2;
             ctx.stroke();
-
-            // Label
-            ctx.fillStyle = "#000";
-            ctx.font = "12px sans-serif";
-            ctx.fillText(`#${index+1}`, (currentX + 2) * scale, (currentY + 15) * scale);
-
-            currentX += box.w + 2;
-            maxHeightInRow = Math.max(maxHeightInRow, box.h);
+            
+            // Move next piece over (very basic layout)
+            const widths = p.coords.map(c => c.x);
+            offsetX += Math.max(...widths) + 2;
         });
-
-        // Statistics
-        const slabArea = slabL * slabW;
-        const yieldPerc = ((totalCutArea / slabArea) * 100).toFixed(1);
-        const wastePerc = (100 - yieldPerc).toFixed(1);
-
-        document.getElementById('statPanel').style.display = 'grid';
-        document.getElementById('yieldVal').innerText = yieldPerc + "%";
-        document.getElementById('wasteVal').innerText = wastePerc + "%";
     }
-</script>
 
+    renderInputs();
+</script>
 </body>
 </html>
